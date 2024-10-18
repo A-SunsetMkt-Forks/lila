@@ -142,7 +142,7 @@ const dateFormat = memoize(() =>
     ? new Intl.DateTimeFormat(site.displayLocale, {
         month: 'short',
         day: '2-digit',
-      } as any).format
+      }).format
     : (d: Date) => d.toLocaleDateString(),
 );
 
@@ -202,9 +202,9 @@ const share = (ctx: RelayViewContext) => {
       ],
       ['Embed this broadcast in your website', iframe(ctx.relay.tourPath()), iframeHelp],
       [`Embed ${roundName} in your website`, iframe(ctx.relay.roundPath()), iframeHelp],
-    ].map(([i18n, path, help]: [string, string, VNode]) =>
+    ].map(([text, path, help]: [string, string, VNode]) =>
       h('div.form-group', [
-        h('label.form-label', ctx.ctrl.trans.noarg(i18n)),
+        h('label.form-label', text),
         copyMeInput(path.startsWith('/') ? `${baseUrl()}${path}` : path),
         help,
       ]),
@@ -315,7 +315,19 @@ const roundSelect = (relay: RelayCtrl, study: StudyCtrl) => {
 
 const games = (ctx: RelayViewContext) => [
   ...header(ctx),
-  ctx.study.chapters.list.looksNew() ? undefined : multiBoardView(ctx.study.multiBoard, ctx.study),
+  ctx.study.chapters.list.looksNew()
+    ? h(
+        'div.relay-tour__note',
+        h('div', [
+          h('div', 'No boards yet. These will appear once games are uploaded.'),
+          ctx.study.members.myMember() &&
+            h('small', [
+              'Boards can be loaded with a source or via the ',
+              h('a', { attrs: { href: '/broadcast/app' } }, 'Broadcaster App'),
+            ]),
+        ]),
+      )
+    : multiBoardView(ctx.study.multiBoard, ctx.study),
   !ctx.ctrl.isEmbed && showSource(ctx.relay.data),
 ];
 
@@ -375,7 +387,7 @@ const subscribe = (relay: RelayCtrl, ctrl: AnalyseCtrl) =>
     ? [
         toggle(
           {
-            name: 'Subscribe',
+            name: i18n.site.subscribe,
             id: 'tour-subscribe',
             title:
               'Subscribe to be notified when each round starts. You can toggle bell or push ' +
@@ -388,7 +400,6 @@ const subscribe = (relay: RelayCtrl, ctrl: AnalyseCtrl) =>
               ctrl.redraw();
             },
           },
-          ctrl.trans,
           ctrl.redraw,
         ),
       ]
